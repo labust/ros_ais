@@ -34,6 +34,11 @@ class SensorAIS(rclpy.node.Node):
 
         # Internal variables
         self.ais_data_seq_counter = 0
+        self.pub_ais_data_all1 = self.node.create_publisher(Rosais123, 'ais/position_report', 10)
+        self.pub_ais_data_all2 = self.node.create_publisher(Rosais411, 'ais/Base_station_report', 10)
+        self.pub_ais_data_all3 = self.node.create_publisher(Rosais8dac200, 'ais/geometry_report', 10)
+        self.pub_NavSatFix = self.node.create_publisher(NavSatFix, 'ais/NavSatFix' , 10)
+
 
         # Create Topics
 #        self.pub_ais_data = self.node.create_publisher(ros_AIS123, 'ais/position_report', 10)
@@ -48,7 +53,6 @@ class SensorAIS(rclpy.node.Node):
                 self.publish_ais_data()
             except Exception as e:
                 self.node.get_logger().warn(self.node_name + ": Error while publishing AIS data!")
-                self.node.get_logger().warn(e)
                 #rospy.logwarn(self.node_name + ": Error while publishing AIS data!")
                 #rospy.logwarn(e)
             rclpy.spin_once(self.node, timeout_sec=0.1)
@@ -88,14 +92,14 @@ class SensorAIS(rclpy.node.Node):
                 decoded=decode(str(fields[5]), int(fields[6][0]))
                 if decoded['id'] == 1 or decoded['id'] == 2 or decoded['id'] == 3 or decoded['id'] == 18:
                     #rospy.loginfo(self.node_name + ": Position Report received from mmsi:" + str(decoded['mmsi']))
-                    self.pub_ais_data = self.node.create_publisher( Rosais123, 'ais/' + 'id_' + str(decoded['mmsi']) + '/position_report', 10)
-                    self.pub_NavSatFix = self.node.create_publisher( NavSatFix , 'ais/' + 'id_' + str(decoded['mmsi']) + '/NavSatFix', 10)
+                    # self.pub_ais_data = self.node.create_publisher( Rosais123, 'ais/' + 'id_' + str(decoded['mmsi']) + '/position_report', 10)
+                    # self.pub_NavSatFix = self.node.create_publisher( NavSatFix , 'ais/' + 'id_' + str(decoded['mmsi']) + '/NavSatFix', 10)
                     ais_data.header.stamp = self.get_clock().now().to_msg()
                     ais_data.header.frame_id =str(decoded['mmsi'])
                     ais_data.id = decoded['id']
                     ####NAVIGATION ''''
                     ais_nav.header.stamp = self.get_clock().now().to_msg()
-                    ais_nav.header.frame_id = str(decoded['mmsi'])
+                    ais_nav.header.frame_id = 'mmsi' + str(decoded['mmsi'])
                     ais_nav.longitude = decoded['x']
                     ais_nav.latitude = decoded['y']
                  #   ais_data.repeat_indicator = decoded['repeat_indicator']
@@ -119,18 +123,18 @@ class SensorAIS(rclpy.node.Node):
              #       ais_data.utc_hour = decoded['utc_hour']
              #      ais_data.utc_min = decoded['utc_min']
              #       ais_data.utc_spare = decoded['utc_spare']
-                    self.pub_ais_data.publish(ais_data)
                     self.pub_NavSatFix.publish(ais_nav)
+                    self.pub_ais_data_all1.publish(ais_data)
                 elif decoded['id'] == 4 or decoded['id'] == 11:
                     #rospy.loginfo(self.node_name + ": Base Station Report received from mmsi:" + str(decoded['mmsi']))
-                    self.pub_ais_data2 = self.node.create_publisher( Rosais411 ,'ais/' + 'id_' + str(decoded['mmsi']) + '/Base_station_report' , 10)
-                    self.pub_NavSatFix = self.node.create_publisher( NavSatFix ,'ais/' + 'id_' + str(decoded['mmsi']) + '/NavSatFix' , 10)
+                    # self.pub_ais_data2 = self.node.create_publisher( Rosais411 ,'ais/' + 'id_' + str(decoded['mmsi']) + '/Base_station_report' , 10)
+                    # self.pub_NavSatFix = self.node.create_publisher( NavSatFix ,'ais/' + 'id_' + str(decoded['mmsi']) + '/NavSatFix' , 10)
                     ais_data2.header.stamp = self.get_clock().now().to_msg()
-                    ais_data2.header.frame_id = str(decoded['mmsi'])
+                    ais_data2.header.frame_id = 'mmsi' + str(decoded['mmsi'])
                     ais_data2.id = decoded['id']
                      ####NAVIGATION ''''
                     ais_nav.header.stamp = self.get_clock().now().to_msg()
-                    ais_nav.header.frame_id = str(decoded['mmsi'])
+                    ais_nav.header.frame_id = 'mmsi' + str(decoded['mmsi'])
                     ais_nav.longitude = decoded['x']
                     ais_nav.latitude = decoded['y']
 
@@ -152,23 +156,25 @@ class SensorAIS(rclpy.node.Node):
                 #    ais_data2.raim = decoded['raim']
 
 
-                    self.pub_ais_data2.publish(ais_data2)
                     self.pub_NavSatFix.publish(ais_nav)
+                    self.pub_ais_data_all2.publish(ais_data2)
+
 
 
                 elif decoded['id'] == 8 and decoded['dac'] == 200:
                     #rospy.loginfo(self.node_name + ": Ship geometry received from mmsi:" + str(decoded['mmsi']))
-                    self.pub_ais_data3 = self.node.create_publisher( Rosais8dac200 , 'ais/' + 'id_' + str(decoded['mmsi']) + '/geometry_report' , 10)
-                    self.pub_NavSatFix = self.node.create_publisher( NavSatFix , 'ais/' + 'id_' + str(decoded['mmsi']) + '/geometry_report' , 10)
+                    # self.pub_ais_data3 = self.node.create_publisher( Rosais8dac200 , 'ais/' + 'id_' + str(decoded['mmsi']) + '/geometry_report' , 10)
+                    # self.pub_NavSatFix = self.node.create_publisher( NavSatFix , 'ais/' + 'id_' + str(decoded['mmsi']) + '/geometry_report' , 10)
                     ais_data3.header.stamp = self.get_clock().now().to_msg()
-                    ais_data3.header.frame_id = str(decoded['mmsi'])
+                    ais_data3.header.frame_id = 'mmsi' + str(decoded['mmsi'])
                     ais_data3.id = decoded['id']
                     ais_data3.mmsi = decoded['mmsi']
                     ais_data3.length = decoded['length']
                     ais_data3.beam = decoded['beam']
                     ais_data3.draught = decoded['draught']
 
-                    self.pub_ais_data3.publish(ais_data3)
+                    self.pub_ais_data_all3.publish(ais_data3)
+
 
 
                 else:
